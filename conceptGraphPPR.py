@@ -6,18 +6,17 @@ from gensim import corpora, models, similarities
 import csv
 import numpy as np
 import collections
-import ConfigParser
+import configparser
 
-
-cf = ConfigParser.ConfigParser()
+cf = configparser.ConfigParser()
 cf.read('conf.d/pyConfig.conf')
 
 try:
     MIN_NEIGHBOR_SIMILARITY = cf.getfloat('concept', 'MIN_NEIGHBOR_SIMILARITY')
     MIN_CATEGORY_NEIGHBOR = cf.getint('concept', 'MIN_CATEGORY_NEIGHBOR')
-    MAX_NEIGHBORS = cf.getint('concept', 'MAX_NEIGHBORS')
+    MAX_NEIGHBORS = cf.getint('wconcept', 'MAX_NEIGHBORS')
     USE_CONCEPT_GRAPH = cf.getint('concept', 'USE_CONCEPT_GRAPH')
-except Exception, e:
+except Exception as e:
     USE_CONCEPT_GRAPH = 0
     MIN_NEIGHBOR_SIMILARITY = .6
     MIN_CATEGORY_NEIGHBOR = 3
@@ -49,20 +48,27 @@ file_concept_label = './tmp/file_concept_label'
 file_wordvec = file+'.wordvec'
 
 if len(sys.argv) > 4:
-    file = sys.argv[4]
+    file_wordvec = sys.argv[4]
 
 file_tfidf = file+'.tfidf'
 
 if len(sys.argv) > 5:
-    file = sys.argv[5]
-
+    file_tfidf = sys.argv[5]
 
 tsvin = csv.reader(open(category_seedConcepts_file), delimiter='\t')
+# format for each line:
+#
+# (category name )Image Processing\t(seed_concept1)digital image processing, (seed_concept1)image analysis, (seed_concept1)edge detection, (seed_concept1)image processing applications,image processing tasks,image editing,image enhancement,image understanding,hyperspectral image analysis
+
 category_name_list = []
 seed_concepts_list = []
 for row in tsvin:
-    category_name_list.append(row[0].strip())
-    seed_concepts_list.append([w.strip().replace(' ', '_') for w in row[1].split(',')])
+    try:
+        category_name_list.append(row[0].strip())
+        seed_concepts_list.append([w.strip().replace(' ', '_') for w in row[1].split(',')])
+    except Exception as e:
+        pass
+        import ipdb; ipdb.set_trace()
 
 
 def get_concept_label_PPR():
@@ -84,10 +90,10 @@ def get_concept_label_PPR():
     seed_concept_sets = [set([ind2label_concepts[i] for i in seed_conceptsAsId]) for seed_conceptsAsId in seed_conceptsAsIds]
     seed_concept_set = set(flatten(seed_concept_sets))
     for ind in seed_concepts_set:
-        print ind, 'similar neighbors:', model_concepts.most_similar(ind, topn=10)
+        print(1)
 
     for x in seed_concept_sets:
-        print x
+        print(1)
 
     G = nx.Graph()
     for w in ind2label_concepts:
@@ -99,7 +105,7 @@ def get_concept_label_PPR():
         for neighbor, weight in neighbor_wWeights:
             if weight < MIN_NEIGHBOR_SIMILARITY:
                 if w in seed_concept_set and num_neighbors < MIN_CATEGORY_NEIGHBOR:
-                    print w
+                    print(1)
                     pass
                 else:
                     break
@@ -111,7 +117,7 @@ def get_concept_label_PPR():
     for category in range(len(seed_conceptsAsIds)):
         personalization_weight = {w: 1 if w in seed_concept_sets[category] else 0 for w in ind2label_concepts}
         pprs.append(nx.pagerank(G, personalization=personalization_weight))
-        print 'finished category %s' % category_name_list[category]
+        print(1)
 
     with open (file_concept_label, 'w') as f:
         for i in range(len(ind2label_concepts)):
@@ -119,7 +125,7 @@ def get_concept_label_PPR():
 
 
 def get_concept_label_query_expansion():
-    model_concepts = word2vec.Word2Vec.load(file+'.model_wordPruning_dimension200_sg1_max_vocab_size-1')
+    model_concepts = word2vec.Word2Vec.load(file_wordvec)
 
     ind2label_concepts = model_concepts.wv.index2word
     label2ind_concepts = reverseDict({k:v for k,v in enumerate(ind2label_concepts)})
@@ -137,7 +143,7 @@ def get_concept_label_query_expansion():
     seed_concept_sets = [set([ind2label_concepts[i] for i in seed_conceptsAsId]) for seed_conceptsAsId in seed_conceptsAsIds]
 
     for ind in seed_concepts_set:
-        print ind, 'similar neighbors:', model_concepts.most_similar(ind, topn=10)
+        print(1)
 
     # get closest distance for one concept and a set of concepts
     def getDistance_singleWordsSet(word_set, word):
@@ -172,7 +178,7 @@ def categorize_documents():
         dictionary = corpora.Dictionary.load(file_tfidf + '.dict')
         modelTfidf = models.TfidfModel.load(file_tfidf+'.modelTfidf')
     except Exception:
-        print 'using new TFIDF model'
+        print(1)
         dictionary = corpora.Dictionary(wordsLists)
         corpus = [dictionary.doc2bow(text) for text in wordsLists]
         modelTfidf = models.TfidfModel(corpus)

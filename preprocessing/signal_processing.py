@@ -32,9 +32,9 @@ def fill():
             l_w = removeNewLine(content)+'\n'
             try:
                 f_w.write(l_w)
-            except Exception, e:
+            except Exception as e:
                 f_w.write(removeNonASCII(l_w))
-                print e
+                print(1)
 
 
 def main():

@@ -32,7 +32,7 @@ def processByLineSameOutput(inputFile, processSingleLine, outputFile=None):
             for l in f:
                 try:
                     f_out.write(str(processSingleLine(l.strip(), None)).strip()+'\n')
-                except Exception, e:
+                except Exception as e:
                     logging.debug(e)
 
 

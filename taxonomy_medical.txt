@@ -1,0 +1,2 @@
+medicine	medicine, medical, med
+anesthesia_ml_dl	Anaesthesia, Anesthe, anesthesia, machine learning, deep learning, algorithm, statistic, predict, random forest, big data, neural network

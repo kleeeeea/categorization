@@ -56,7 +56,7 @@ def singleFileClean(file, file_output):
                 try:
                     # f_forword2vec.write(l.strip() + ' ')
                     f_out.write(l.strip() + '\n')
-                except Exception, e:
+                except Exception as e:
                     import ipdb; ipdb.set_trace()
                     logging.debug(e)
                 else:

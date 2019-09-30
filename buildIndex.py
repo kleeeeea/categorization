@@ -15,12 +15,12 @@ if len(sys.argv) > 1:
 file_wordvec = file+'.wordvec'
 
 if len(sys.argv) > 2:
-    file = sys.argv[2]
+    file_wordvec = sys.argv[2]
 
 file_tfidf = file+'.tfidf'
 
 if len(sys.argv) > 3:
-    file = sys.argv[3]
+    file_tfidf = sys.argv[3]
 
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -78,35 +78,41 @@ def compute_wordvec():
                 model_concepts_file = file_wordvec
                 try:
                     model = word2vec.Word2Vec.load(model_concepts_file)
-                except Exception, e:
-                    print 'training new model'
-                    model = word2vec.Word2Vec(word2vec.LineSentence(file), size=size,  workers=120, max_vocab_size=max_vocab_size, trim_rule=trim_rule, sg=sg)
-                    model.save(model_concepts_file)
+                except Exception as e:
+                    print(1)
+                    with open(file) as f:
+                        model = word2vec.Word2Vec(word2vec.LineSentence(f), size=size,  workers=120, max_vocab_size=max_vocab_size, trim_rule=trim_rule, sg=sg)
+                        model.save(model_concepts_file)
 
                 print(model.wv.index2word[:100])
 
                 # validation
-                if dictionary == {}:
-                    for _, word in enumerate(model.wv.index2word):
-                        dictionary[word] = len(dictionary)
-                    dictionary['UNK'] = len(dictionary)
+                validate_word2vec(model)
 
-                    valid_examples_frequent = random.sample(range(valid_window), valid_size/2)
-                    valid_examples_phrase = random.sample([index for word, index in dictionary.items() if '_' in word], valid_size/2)
-                    try:
-                        valid_examples_frequent[0] = dictionary['analysis']
-                        valid_examples_phrase[0] = dictionary['machine_learning']
-                    except Exception, e:
-                        pass
 
-                    valid_examples = np.array(valid_examples_frequent + valid_examples_phrase)
+def validate_word2vec(model):
+    if dictionary == {}:
+        for _, word in enumerate(model.wv.index2word):
+            dictionary[word] = len(dictionary)
+        dictionary['UNK'] = len(dictionary)
 
-                    reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
+        valid_examples_frequent = random.sample(range(valid_window), valid_size // 2)
+        valid_examples_phrase = random.sample([index for word, index in dictionary.items() if '_' in word],
+                                              valid_size // 2)
+        try:
+            valid_examples_frequent[0] = dictionary['analysis']
+            valid_examples_phrase[0] = dictionary['machine_learning']
+        except Exception as e:
+            pass
 
-                for i in range(valid_size):
-                    valid_word = reverse_dictionary[valid_examples[i]]
-                    top_k = 10  # number of nearest neighbors
-                    print('Nearest to %s: %s' % (displayString(valid_word), ', '.join([displayString(word) for word, score in model.most_similar(positive=[valid_word], topn=top_k)])))
+        valid_examples = np.array(valid_examples_frequent + valid_examples_phrase)
+
+        reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
+    for i in range(valid_size):
+        valid_word = reverse_dictionary[valid_examples[i]]
+        top_k = 10  # number of nearest neighbors
+        print('Nearest to %s: %s' % (displayString(valid_word), ', '.join(
+            [displayString(word) for word, score in model.most_similar(positive=[valid_word], topn=top_k)])))
 
 
 def compute_tfidf():

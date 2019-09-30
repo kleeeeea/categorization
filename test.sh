@@ -1,22 +1,9 @@
-TEXT=../data/signal_processing__oneDocPerLine.txt
-CATEGORY_SEEDCONCEPTS=taxonomy_signal_processing.txt
-MODEL='ARL'
-SEGGED_TEXT_categorized=$TEXT.categorized
+#!/usr/bin/env bash
 
-source conf.d/autoPhrase.sh
+source ./environs.sh
 
-export TEXT_TO_SEG=$TEXT
-./phrasal_segmentation.sh
-cd -
 
-mkdir -p ../$MODEL
-export SEGGED_TEXT=../$MODEL/segmented_text.txt_test
-export SEGGED_TEXT_phrase_as_word=$SEGGED_TEXT.phrase_as_word
-export SEGGED_TEXT_phrase_as_word_retain_alphanumeric=$SEGGED_TEXT_phrase_as_word.retain_alphanumeric
-export SEGGED_TEXT_WORDVEC=../AutoPhrase/$MODEL/wordvec
-export SEGGED_TEXT_TFIDF=../AutoPhrase/$MODEL/tfidf
+python ./conceptGraphPPR.py $SEGGED_TEXT_phrase_as_word_retain_alphanumeric $CATEGORY_SEED_CONCEPTS $SEGGED_TEXT_CATEGORIZATION $SEGGED_TEXT_WORDVEC $SEGGED_TEXT_TFIDF
+python ./evaluate.py $SEGGED_TEXT_CATEGORIZATION
 
-cp ../AutoPhrase/$MODEL/segmentation.txt $SEGGED_TEXT
-python segmented2phrase_as_word.py $SEGGED_TEXT $SEGGED_TEXT_phrase_as_word
-python retain_alphanumeric.py $SEGGED_TEXT_phrase_as_word $SEGGED_TEXT_phrase_as_word_retain_alphanumeric
-python conceptGraphPPR.py $SEGGED_TEXT_phrase_as_word_retain_alphanumeric $CATEGORY_SEEDCONCEPTS $SEGGED_TEXT_categorized $SEGGED_TEXT_WORDVEC $SEGGED_TEXT_TFIDF
+#random forest, big data, neural network, maximum likelihood
