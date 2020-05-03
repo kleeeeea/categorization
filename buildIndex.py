@@ -1,31 +1,32 @@
-import sys
 import logging
-import re
 import random
-import numpy as np
-from gensim.models import word2vec
+import re
+import sys
+
 import gensim
+import numpy as np
 from gensim import corpora, models
+from gensim.models import word2vec
 from nltk.corpus import stopwords
+
 file = '../data/data_oneFilePerLineBySection/nips/segmented_text.txt_phraseAsWord'
 
 if len(sys.argv) > 1:
     file = sys.argv[1]
 
-file_wordvec = file+'.wordvec'
+file_wordvec = file + '.wordvec'
 
 if len(sys.argv) > 2:
     file_wordvec = sys.argv[2]
 
-file_tfidf = file+'.tfidf'
+file_tfidf = file + '.tfidf'
 
 if len(sys.argv) > 3:
     file_tfidf = sys.argv[3]
 
-
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger('log')
-logger.addHandler(logging.FileHandler(__file__+'.log'))
+logger.addHandler(logging.FileHandler(__file__ + '.log'))
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
@@ -64,7 +65,8 @@ def displayString(w):
     # return w
     return re.sub(r'</?phrase>', '', w)
 
-valid_size = 20  # Random set of words to evaluate similarity on.
+
+valid_size = 2  # Random set of words to evaluate similarity on.
 valid_window = 100  # Only pick dev samples in the head of the distribution.
 
 dictionary = {}
@@ -81,7 +83,7 @@ def compute_wordvec():
                 except Exception as e:
                     print(1)
                     with open(file) as f:
-                        model = word2vec.Word2Vec(word2vec.LineSentence(f), size=size,  workers=120, max_vocab_size=max_vocab_size, trim_rule=trim_rule, sg=sg)
+                        model = word2vec.Word2Vec(word2vec.LineSentence(f), size=size, workers=120, max_vocab_size=max_vocab_size, trim_rule=trim_rule, sg=sg)
                         model.save(model_concepts_file)
 
                 print(model.wv.index2word[:100])
@@ -96,7 +98,7 @@ def validate_word2vec(model):
             dictionary[word] = len(dictionary)
         dictionary['UNK'] = len(dictionary)
 
-        valid_examples_frequent = random.sample(range(valid_window), valid_size // 2)
+        valid_examples_frequent = random.sample(range(min(valid_window, len(dictionary))), valid_size // 2)
         valid_examples_phrase = random.sample([index for word, index in dictionary.items() if '_' in word],
                                               valid_size // 2)
         try:
@@ -106,8 +108,8 @@ def validate_word2vec(model):
             pass
 
         valid_examples = np.array(valid_examples_frequent + valid_examples_phrase)
-
         reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
+
     for i in range(valid_size):
         valid_word = reverse_dictionary[valid_examples[i]]
         top_k = 10  # number of nearest neighbors
@@ -118,6 +120,7 @@ def validate_word2vec(model):
 def compute_tfidf():
     def readIntoListsOfWords(file):
         return [document.lower().split() for document in open(file).readlines()]
+
     wordsLists = readIntoListsOfWords(file)
     dictionary = corpora.Dictionary(wordsLists)
     corpus = [dictionary.doc2bow(text) for text in wordsLists]
@@ -125,7 +128,7 @@ def compute_tfidf():
 
     corpora.MmCorpus.serialize(file_tfidf + '.corpus', corpus)  # store to disk, for later use
     dictionary.save(file_tfidf + '.dict')  # store the dictionary, for future reference
-    modelTfidf.save(file_tfidf+'.modelTfidf')
+    modelTfidf.save(file_tfidf + '.modelTfidf')
 
 
 def main():

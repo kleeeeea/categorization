@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-export RAW_TRAIN=/home/klee/data/concept_medical/papers_text_maxPapers10000.0.txt
+
+export RAW_TRAIN=$(realpath $( dirname "${BASH_SOURCE[0]}" ))/input/signal_processing_sample_input.txt
 export MODEL=concept_medical_10000
-export CATEGORY_SEED_CONCEPTS=./taxonomy_medical.txt
+export CATEGORY_SEED_CONCEPTS=$(realpath $( dirname "${BASH_SOURCE[0]}" ))/input/taxonomy_signal_processing_test.txt
 
 source conf.d/autoPhrase.sh
-
-
 
 mkdir -p ../AutoPhrase/$MODEL
 mkdir -p tmp

@@ -1,19 +1,15 @@
-import os
-import sys
 import logging
 import re
-import random
-import re
+import sys
 
-
-logging.basicConfig(filename=__file__+'.log', level=logging.DEBUG)
+logging.basicConfig(filename=__file__ + '.log', level=logging.DEBUG)
 
 file = None
 
 if len(sys.argv) > 1:
     file = destinedir = sys.argv[1]
 
-outfile = file+'_phraseAsWord'
+outfile = file + '_phraseAsWord'
 # '../data/data_oneFilePerLine/jmlr_vldb/segmented_text.txt_phraseAsWord_alnumRetained_removedJournalHeader_strong_concepts'
 
 if len(sys.argv) > 2:
@@ -26,6 +22,8 @@ square_brackets_enclosed = re.compile(
 
 def brackets2UnderScoreNotation(l):
     return square_brackets_enclosed.sub(lambda x: "<phrase>%s</phrase>" % re.sub('\s', '_', x.group('phrase')), l)
+
+
 # x.group('phrase')
 
 underScore = '_'
@@ -46,8 +44,9 @@ def singleFileClean(file, file_output):
                 # l = l.replace('$', ' ')
                 # l = l.lower()
                 l_o = l
+
                 l = brackets2UnderScoreNotation(l)
-                
+
                 l = condenseConsecutiveunderScoreToOne(l)
                 # if '_____' in l:
                 #     import ipdb;ipdb.set_trace()
@@ -57,7 +56,8 @@ def singleFileClean(file, file_output):
                     # f_forword2vec.write(l.strip() + ' ')
                     f_out.write(l.strip() + '\n')
                 except Exception as e:
-                    import ipdb; ipdb.set_trace()
+                    import ipdb;
+                    ipdb.set_trace()
                     logging.debug(e)
                 else:
                     pass

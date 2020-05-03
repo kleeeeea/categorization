@@ -1,12 +1,14 @@
 from __future__ import division
-import sys
-import networkx as nx
-from gensim.models import word2vec
-from gensim import corpora, models, similarities
-import csv
-import numpy as np
+
 import collections
 import configparser
+import csv
+import sys
+
+import networkx as nx
+import numpy as np
+from gensim import corpora, models
+from gensim.models import word2vec
 
 cf = configparser.ConfigParser()
 cf.read('conf.d/pyConfig.conf')
@@ -39,18 +41,18 @@ category_seedConcepts_file = './taxonomy_signal_processing_application.txt'
 if len(sys.argv) > 2:
     category_seedConcepts_file = sys.argv[2]
 
-categorization_file = file+'_categorization'
+categorization_file = file + '_categorization'
 if len(sys.argv) > 3:
     categorization_file = sys.argv[3]
 
 file_concept_label = './tmp/file_concept_label'
 
-file_wordvec = file+'.wordvec'
+file_wordvec = file + '.wordvec'
 
 if len(sys.argv) > 4:
     file_wordvec = sys.argv[4]
 
-file_tfidf = file+'.tfidf'
+file_tfidf = file + '.tfidf'
 
 if len(sys.argv) > 5:
     file_tfidf = sys.argv[5]
@@ -68,7 +70,9 @@ for row in tsvin:
         seed_concepts_list.append([w.strip().replace(' ', '_') for w in row[1].split(',')])
     except Exception as e:
         pass
-        import ipdb; ipdb.set_trace()
+        import ipdb;
+
+        ipdb.set_trace()
 
 
 def get_concept_label_PPR():
@@ -119,7 +123,7 @@ def get_concept_label_PPR():
         pprs.append(nx.pagerank(G, personalization=personalization_weight))
         print(1)
 
-    with open (file_concept_label, 'w') as f:
+    with open(file_concept_label, 'w') as f:
         for i in range(len(ind2label_concepts)):
             f.write('%s:%s\n' % (ind2label_concepts[i], [pprs[category][ind2label_concepts[i]] for category in range(len(category_name_list))]))
 
@@ -128,7 +132,7 @@ def get_concept_label_query_expansion():
     model_concepts = word2vec.Word2Vec.load(file_wordvec)
 
     ind2label_concepts = model_concepts.wv.index2word
-    label2ind_concepts = reverseDict({k:v for k,v in enumerate(ind2label_concepts)})
+    label2ind_concepts = reverseDict({k: v for k, v in enumerate(ind2label_concepts)})
 
     def getConceptIDs(seed_concepts, label2ind_concepts):
         l = [label2ind_concepts.get('<phrase>%s</phrase>' % w, label2ind_concepts.get(w)) for w in seed_concepts]
@@ -138,7 +142,7 @@ def get_concept_label_query_expansion():
     seed_concepts_set = set([ind2label_concepts[i] for i in flatten(seed_conceptsAsIds)])
 
     ind2label_concepts = [w for w in ind2label_concepts if '_' in w or w in seed_concepts_set]
-    label2ind_concepts = reverseDict({k:v for k,v in enumerate(ind2label_concepts)})
+    label2ind_concepts = reverseDict({k: v for k, v in enumerate(ind2label_concepts)})
     seed_conceptsAsIds = [getConceptIDs(seed_concepts, label2ind_concepts) for seed_concepts in seed_concepts_list]
     seed_concept_sets = [set([ind2label_concepts[i] for i in seed_conceptsAsId]) for seed_conceptsAsId in seed_conceptsAsIds]
 
@@ -160,7 +164,7 @@ def get_concept_label_query_expansion():
 def categorize_documents():
     def readSims(file_concept_label):
         word2sims = {}
-        with open (file_concept_label) as f:
+        with open(file_concept_label) as f:
             for l in f:
                 word, label = l.split(':', 1)
                 word2sims[word] = eval(label)
@@ -171,12 +175,13 @@ def categorize_documents():
 
     def readIntoListsOfWords(file):
         return [document.lower().split() for document in open(file).readlines()]
+
     wordsLists = readIntoListsOfWords(file)
 
     try:
-        corpus = corpora.MmCorpus(file_tfidf+'.corpus')
+        corpus = corpora.MmCorpus(file_tfidf + '.corpus')
         dictionary = corpora.Dictionary.load(file_tfidf + '.dict')
-        modelTfidf = models.TfidfModel.load(file_tfidf+'.modelTfidf')
+        modelTfidf = models.TfidfModel.load(file_tfidf + '.modelTfidf')
     except Exception:
         print(1)
         dictionary = corpora.Dictionary(wordsLists)
@@ -185,14 +190,14 @@ def categorize_documents():
 
         corpora.MmCorpus.serialize(file_tfidf + '.corpus', corpus)  # store to disk, for later use
         dictionary.save(file_tfidf + '.dict')  # store the dictionary, for future reference
-        modelTfidf.save(file_tfidf+'.modelTfidf')
+        modelTfidf.save(file_tfidf + '.modelTfidf')
 
     document_size = len(wordsLists)
 
     def getTFIDFWeights(raw_words):
-        raw_word2TFIDFweights = { dictionary[word_id]: weight for word_id, weight in modelTfidf[[dictionary.doc2bow(raw_words)]][0] }
+        raw_word2TFIDFweights = {dictionary[word_id]: weight for word_id, weight in modelTfidf[[dictionary.doc2bow(raw_words)]][0]}
         c = collections.Counter(raw_words)
-        raw_word2TFIDFweightsTFAdjusted = {word: raw_word2TFIDFweights[word]/c[word] for word in raw_word2TFIDFweights }
+        raw_word2TFIDFweightsTFAdjusted = {word: raw_word2TFIDFweights[word] / c[word] for word in raw_word2TFIDFweights}
         return raw_word2TFIDFweightsTFAdjusted
 
     # compute tfidf

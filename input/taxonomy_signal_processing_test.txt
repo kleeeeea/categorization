@@ -1,0 +1,3 @@
+Image Processing	face_recognition
+Statistics	maximum_likelihood_estimator, dictionary_learning
+Audio Signal Processing	music_information_retrieval
